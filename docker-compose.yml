@@ -1,0 +1,20 @@
+version: "2"
+services:
+    academia:
+        build: .
+        volumes:
+            - .:/root/project:ro
+            - academia-data:/root/data
+        links:
+            - db
+        ports:
+            - "8080:8080"
+        env_file:
+            - ./private.env
+    db:
+        image: postgres:alpine
+        env_file:
+            - ./private.env
+volumes:
+    academia-data:
+        driver: local
