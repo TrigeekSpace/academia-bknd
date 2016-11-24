@@ -10,11 +10,11 @@ services:
         ports:
             - "8080:8080"
         env_file:
-            - ./private.env
+            - ./private/env.sh
     db:
         image: postgres:alpine
         env_file:
-            - ./private.env
+            - ./private/env.sh
 volumes:
     academia-data:
         driver: local

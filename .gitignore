@@ -3,4 +3,4 @@
 __pycache__
 
 # Private configuration
-private.env
+private

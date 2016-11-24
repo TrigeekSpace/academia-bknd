@@ -6,16 +6,25 @@ from app import app
 METADATA_KEY = "__metadata__"
 HANDLER_TYPES = ["res_data", "res_action", "inst_data", "inst_action"]
 
+SUCCESS_RESP = {"status": "success"}
+
 class APIError(Exception):
     """ API error class. """
     def __init__(self, status, type, **kwargs):
         super(APIError, self).__init__(dict(status="failed", type=type, **kwargs))
         self.status = status
 
+# API error handler
+@app.errorhandler(APIError)
+def api_error_handler(e):
+    """ API error handler. """
+    return jsonify(e.message), e.status
+
 def assert_logic(value, description, status=400):
     """ API logic assert. """
     if not value:
-        raise APIError(status, "logic", description)
+        raise APIError(status, "logic", reason=description)
+    return value
 
 class APIView(MethodView):
     """ Backend API view. """
@@ -138,3 +147,17 @@ def load_data(schema, data, **kwargs):
 def dump_data(schema, obj, **kwargs):
     """ Dump data through schema. """
     return schema.dump(obj, **kwargs)[0]
+
+def get_pk(model, pk, allow_null=False, error=APIError(404, "not_found")):
+    """ Get element by primary key. """
+    result = model.query.get(pk)
+    if not (allow_null or result):
+        raise error
+    return result
+
+def get_by(model, allow_null=False, error=APIError(404, "not_found"), **kwargs):
+    """ Get element by given condition. """
+    result = model.query.filter_by(**kwargs).first()
+    if not (allow_null or result):
+        raise error
+    return result
