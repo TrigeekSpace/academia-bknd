@@ -1,18 +1,19 @@
 """ User-related APIs. """
-from flask import request, session, jsonify
+from flask import request, jsonify
 
 from app import db
-from app.models import User
+from app.models import User, Session
 from app.schemas import UserSchema
-from app.util import SUCCESS_RESP, APIView, register_view, res_action, load_data, dump_data, get_pk
+from app.util import SUCCESS_RESP, APIView, register_view, res_action, load_data, dump_data, get_pk, auth_required
 
 @register_view("/users")
 class UserView(APIView):
+    """ User view class. """
     schema = UserSchema()
     def create(self):
         """ Create a new user. """
         # Load user data
-        user = load_data(self.schema, request.form)
+        user = load_data(self.schema, request.get_json())
         # Add to database
         db.session.add(user)
         db.session.commit()
@@ -26,7 +27,7 @@ class UserView(APIView):
         """ Update user information. """
         # Load update data, then find and update user
         user = get_pk(User, id)
-        update_data = load_data(self.schema, request.form, partial=True)
+        update_data = load_data(self.schema, request.get_json(), partial=True)
         user.__dict__.update(**update_data)
         db.session.commit()
         # Success
@@ -42,10 +43,14 @@ class UserView(APIView):
     @res_action("login")
     def login(self):
         """ Log user in. """
-        # TODO: Log-in
-        pass
+        # TODO: User log-in
     @res_action("logout")
+    @auth_required()
     def logout(self):
         """ Log user out. """
-        session["user"] = None
+        # Remove current session
+        api_session = get_pk(Session, request.headers[AUTH_TOKEN_HEADER])
+        db.session.delete(api_session)
+        db.session.commit()
+        # Success
         return jsonify(SUCCESS_RESP)
