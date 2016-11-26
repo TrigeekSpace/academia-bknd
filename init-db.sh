@@ -1,0 +1,7 @@
+#! /bin/sh
+set -e
+
+psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" <<EOF
+    CREATE DATABASE ${DB_NAME};
+    GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} to ${POSTGRES_USER};
+EOF

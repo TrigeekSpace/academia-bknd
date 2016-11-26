@@ -3,6 +3,7 @@ from os import unlink
 from code import interact
 from tempfile import mkstemp
 from unittest import defaultTestLoader, TextTestRunner
+from importlib import import_module
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
@@ -17,34 +18,36 @@ def setup_app(app_name=__name__, db_uri=None):
     app = Flask(app_name)
     # Database object
     app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db = SQLAlchemy(app)
     # Import all related modules
-    import app.models
-    import app.views
+    import_module("app.models")
+    import_module("app.views")
 
 def run_app(**kwargs):
     """ Run application. """
-    global app
+    global app, db
     setup_app(db_uri=DB_URI)
+    # Reset database
+    if kwargs.get("reset"):
+        db.drop_all()
+    db.create_all()
     # Run app
     app.run(
         host=kwargs.get("host"),
         port=kwargs.get("port"),
-        debug=not kwargs.get("production")
+        debug=not kwargs.get("production", False)
     )
 
 def run_test(**kwargs):
     """ Run in test mode. """
     global db
-    # Make temporary database and set up application
-    db_file = mkstemp(prefix="academia-test-", suffix=".db")
-    setup_app(db_uri="sqlite://%s" % db_file)
+    # Set-up in-memory application
+    setup_app(db_uri="sqlite://")
     db.create_all()
     # Run tests
     tests = defaultTestLoader.loadTestsFromModule("app.tests")
     TextTestRunner().run(tests)
-    # Unlink database
-    unlink(db_file)
 
 def run_shell(**kwargs):
     """ Run in shell mode. """

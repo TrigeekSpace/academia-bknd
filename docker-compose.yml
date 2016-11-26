@@ -8,13 +8,18 @@ services:
         links:
             - db
         ports:
-            - "8080:8080"
+            - "127.0.0.1:8080:8080"
         env_file:
-            - ./private/env.sh
+            - ./private/env_file
     db:
         image: postgres:alpine
+        volumes:
+            - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+            - academia-db:/var/lib/postgresql/data
         env_file:
-            - ./private/env.sh
+            - ./private/env_file
 volumes:
     academia-data:
+        driver: local
+    academia-db:
         driver: local

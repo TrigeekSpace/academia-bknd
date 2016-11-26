@@ -1,5 +1,5 @@
 """ Academia site configuration. """
-from private_config import *
+from app.private_config import *
 
 # Rounds of hashing
 N_HASH_ROUNDS = 256
@@ -9,7 +9,7 @@ CORS_MAX_AGE = 691200
 AUTH_TOKEN_HEADER = "X-Academia-Auth-Token"
 
 # Database name
-DB_NAME = "academia"
+DB_NAME = os.environ["DB_NAME"]
 # Database user name
 DB_USERNAME = os.environ["POSTGRES_USER"]
 # Database user password

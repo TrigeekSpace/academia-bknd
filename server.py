@@ -16,11 +16,13 @@ if __name__=="__main__":
     parser.add_argument("-t", "--test", action="store_const", dest="mode", const="test", help="Test mode.")
     parser.add_argument("-P", "--production", action="store_true", help="Production mode.")
     parser.add_argument("-s", "--shell", action="store_const", dest="mode", const="shell", help="Interactive mode.")
-    parser.add_argument("-r", "--reset-db", action="store_true", help="Reset database.")
+    parser.add_argument("-r", "--reset", action="store_true", help="Reset database.")
     # Parse arguments
-    args = parser.parse_args()
-    app.run_with_mode(args.get("mode", "app"), **args)
+    args = vars(parser.parse_args())
+    if not args.get("mode"):
+        args["mode"] = "app"
+    app.run_with_mode(**args)
 # Production mode; get WSGI application
 else:
     app.setup_app(db_uri=app.DB_URI)
-    from app import app as wsgi_app
+    wsgi_app = app.app

@@ -4,7 +4,9 @@ from flask import request, jsonify
 from app import db
 from app.models import User, Session
 from app.schemas import UserSchema
-from app.util import SUCCESS_RESP, APIView, register_view, res_action, load_data, dump_data, get_pk, auth_required
+from app.util.core import SUCCESS_RESP, APIView, register_view, res_action
+from app.util.data import load_data, dump_data, get_pk
+from app.util.perm import auth_required
 
 @register_view("/users")
 class UserView(APIView):
@@ -18,20 +20,28 @@ class UserView(APIView):
         db.session.add(user)
         db.session.commit()
         # Success
-        return jsonify(dump_data(self.schema, user))
+        return jsonify(
+            **SUCCESS_RESP,
+            data=dump_data(self.schema, user)
+        )
     def retrieve(self, id):
         """ Get existing user information. """
         user = get_pk(User, id)
-        return jsonify(dump_data(self.schema, user))
+        return jsonify(
+            **SUCCESS_RESP,
+            data=dump_data(self.schema, user)
+        )
     def partial_update(self, id):
         """ Update user information. """
         # Load update data, then find and update user
         user = get_pk(User, id)
-        update_data = load_data(self.schema, request.get_json(), partial=True)
-        user.__dict__.update(**update_data)
+        load_data(self.schema, request.get_json(), instance=user)
         db.session.commit()
         # Success
-        return jsonify(dump_data(self.schema, user))
+        return jsonify(
+            **SUCCESS_RESP,
+            data=dump_data(self.schema, user)
+        )
     def destroy(self, id):
         """ Remove user. """
         # Find and remove user
@@ -39,7 +49,7 @@ class UserView(APIView):
         db.session.delete(user)
         db.session.commit()
         # Success
-        return jsonify(SUCCESS_RESP)
+        return jsonify(**SUCCESS_RESP)
     @res_action("login")
     def login(self):
         """ Log user in. """
@@ -53,4 +63,4 @@ class UserView(APIView):
         db.session.delete(api_session)
         db.session.commit()
         # Success
-        return jsonify(SUCCESS_RESP)
+        return jsonify(**SUCCESS_RESP)
