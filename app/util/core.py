@@ -1,8 +1,14 @@
 """ Core utility functions and classes. """
-import json
+import re
 from importlib import import_module
-from flask import Response, request
+from base64 import b64decode
+from contextlib import contextmanager
+from types import FunctionType
+from traceback import format_exc
+from flask import Response, request, g, jsonify
 from flask.views import MethodView
+from marshmallow import Schema
+from marshmallow.schema import SchemaMeta
 
 from app import app, db
 from app.config import AUTH_TOKEN_HEADER, CORS_MAX_AGE
@@ -20,17 +26,6 @@ class APIError(Exception):
         self.data = dict(status="failed", type=type, **kwargs)
         self.status = status
 
-# API error handler
-@app.errorhandler(APIError)
-def api_error_handler(e):
-    """ API error handler. """
-    return Response(
-        json.dumps(e.data),
-        status=e.status,
-        headers={"Access-Control-Allow-Origin": "*"},
-        mimetype="application/json"
-    )
-
 def assert_logic(value, description, status=400):
     """ API logic assert. """
     if not value:
@@ -41,19 +36,36 @@ class APIView(MethodView):
     """ Backend API view. """
     # Session class (Used to break reference circle)
     session_class = None
+    # Get by primary key
+    get_pk = None
     def __init__(self, *args, **kwargs):
         """ Constructor. """
         super(APIView, self).__init__(*args, **kwargs)
         # Session class
         if not self.session_class:
             self.session_class = import_module("app.models").Session
+        # Gen by primary key
+        if not self.get_pk:
+            self.get_pk = import_module("app.util.data").get_pk
     def dispatch_request(self, *args, **kwargs):
         """ Cross-origin request support. Authentication. """
-        # Authentication
-        token = request.headers.get(AUTH_TOKEN_HEADER)
-        request.user = get_by(self.session_class, token=token, error=APIError(401, "auth_failure")).user if token else None
-        # Call base class method
-        response = super(APIView, self).dispatch_request(*args, **kwargs)
+        try:
+            # Authentication
+            with map_error(APIError(401, "auth_failed")):
+                token = b64decode(request.headers.get(AUTH_TOKEN_HEADER, b""))
+                g.user = self.get_pk(session_class, token).user if token else None
+            # Call base class method
+            response = super(APIView, self).dispatch_request(*args, **kwargs)
+        except APIError as e:
+            response = jsonify(e.data)
+            response.status_code = e.status
+        except Exception as e:
+            response = jsonify(
+                status="failed",
+                type="exception",
+                exception_type=type(e).__name__,
+                backtrace=format_exc()
+            )
         # Cross-origin request
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response
@@ -109,7 +121,7 @@ def register_view(url, endpoint=None, view=None):
         handlers = {}
         setattr(view, "_%s_handlers" % handler_type, handlers)
         # Search for handlers
-        for (key, value) in enumerate(view.__dict__):
+        for _, value in view.__dict__.items():
             target = get_metadata(value, handler_type)
             if target:
                 handlers[target] = value
@@ -144,7 +156,7 @@ def res_data(name, view=None, handler=None):
         set_metadata(handler, "res_data", name)
     else:
         view._res_data_handlers[name] = handler
-    return view
+    return handler
 
 def res_action(name, view=None, handler=None):
     """ Declare resource action handler. """
@@ -154,7 +166,7 @@ def res_action(name, view=None, handler=None):
         set_metadata(handler, "res_action", name)
     else:
         view._res_action_handlers[name] = handler
-    return view
+    return handler
 
 def inst_data(name, view=None, handler=None):
     """ Declare instance data handler. """
@@ -164,7 +176,7 @@ def inst_data(name, view=None, handler=None):
         set_metadata(handler, "inst_data", name)
     else:
         view._inst_data_handlers[name] = handler
-    return view
+    return handler
 
 def inst_action(name, view=None, handler=None):
     """ Declare instance action handler. """
@@ -174,4 +186,36 @@ def inst_action(name, view=None, handler=None):
         set_metadata(handler, "inst_action", name)
     else:
         view._inst_action_handlers[name] = handler
-    return view
+    return handler
+
+__first_cap_rx = re.compile("(.)([A-Z][a-z]+)")
+__all_cap_rx = re.compile("([a-z0-9])([A-Z])")
+
+def camel_to_snake(camel_name):
+    """ Convert camel case name to snake case. """
+    s1 = __first_cap_rx.sub(r"\1_\2", camel_name)
+    return __all_cap_rx.sub(r"\1_\2", s1).lower()
+
+@contextmanager
+def map_error(error_mapping):
+    """ Execute code in a with block that does error mapping for the API. """
+    try:
+        yield
+    except Exception as e:
+        # Error mapping
+        if isinstance(error_mapping, dict):
+            # Iterate through mapping
+            for error_type, target in error_mapping.items():
+                # Type matched
+                if isinstance(e, error_type):
+                    # Transform handler
+                    if isinstance(target, FunctionType):
+                        raise target(e)
+                    # Error object
+                    else:
+                        raise target
+            # No match, rethrow exception
+            raise e
+        # Match all exceptions to same object
+        else:
+            raise error_mapping

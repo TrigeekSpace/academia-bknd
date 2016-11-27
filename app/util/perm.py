@@ -1,13 +1,14 @@
 """ Permission management utilities. """
 import functools
 from types import FunctionType
+from flask import g
 
 from app.models import AbstractBaseGroup, User
 from app.util.core import APIError
 
 def __handle_perm_rule(rule, user, **kwargs):
     """ Handle permission rule. """
-    return __perm_rule_map[type(rule)](user, **kwargs)
+    return __perm_rule_map[type(rule)](rule, user, **kwargs)
 
 def __perm_rule_tuple(rules, user, **kwargs):
     """
@@ -55,10 +56,10 @@ def check_perm(*rules, **kwargs):
     """ Check operation permission. """
     throw = kwargs.get("throw", True)
     # Not logged in
-    if not request.user and throw:
+    if not g.user and throw:
         raise APIError(401, "login_required")
     # Execute rules
-    authorized = __handle_perm_rule(rules, **kwargs)
+    authorized = __handle_perm_rule(rules, g.user, **kwargs)
     if not authorized and throw:
         raise APIError(403, "perm_denied")
     return authorized

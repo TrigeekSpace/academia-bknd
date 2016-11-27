@@ -20,3 +20,4 @@ class UserSchema(ModelSchema):
         sqla_session = db.session
         load_only = ("password",)
         dump_only = ("id", "join_date")
+        exclude = ("sessions",)
