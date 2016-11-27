@@ -66,6 +66,7 @@ class APIView(MethodView):
                 exception_type=type(e).__name__,
                 backtrace=format_exc()
             )
+            response.status_code = 400
         # Cross-origin request
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response
