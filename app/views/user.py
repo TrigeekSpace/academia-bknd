@@ -9,42 +9,49 @@ from app.models import User, Session
 from app.schemas import UserSchema
 from app.config import TOKEN_LEN, AUTH_TOKEN_HEADER
 from app.util.core import SUCCESS_RESP, APIView, register_view, res_action, assert_logic, APIError, map_error
-from app.util.data import load_data, dump_data, get_pk, get_by, parse_param
+from app.util.data import load_data, dump_data, get_pk, get_by, parse_param, filter_user
 from app.util.perm import auth_required
 
 @register_view("/users")
 class UserView(APIView):
     """ User view class. """
-    schema = UserSchema()
+    def list(self):
+        """ List all users. """
+        users = filter_user(User.query, User).all()
+        # Success
+        return jsonify(
+            **SUCCESS_RESP,
+            data=dump_data(UserSchema, users, many=True)
+        )
     def create(self):
         """ Create a new user. """
         # Load user data
-        user = load_data(self.schema, request.get_json())
+        user = load_data(UserSchema, request.get_json())
         # Add to database
         db.session.add(user)
         db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(self.schema, user)
+            data=dump_data(UserSchema, user)
         )
     def retrieve(self, id):
         """ Get existing user information. """
         user = get_pk(User, id)
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(self.schema, user)
+            data=dump_data(UserSchema, user)
         )
     def partial_update(self, id):
         """ Update user information. """
         # Load update data, then find and update user
         user = get_pk(User, id)
-        load_data(self.schema, request.get_json(), instance=user)
+        load_data(UserSchema, request.get_json(), instance=user)
         db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(self.schema, user)
+            data=dump_data(UserSchema, user)
         )
     def destroy(self, id):
         """ Remove user. """

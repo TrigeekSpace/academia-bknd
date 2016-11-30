@@ -1,10 +1,12 @@
 """ Core utility functions and classes. """
-import re
+import re, json
 from importlib import import_module
 from base64 import b64decode
 from contextlib import contextmanager
 from types import FunctionType
 from traceback import format_exc
+from base64 import b64decode
+from urllib.parse import unquote
 from flask import Response, request, g, jsonify
 from flask.views import MethodView
 from marshmallow import Schema
@@ -50,6 +52,13 @@ class APIView(MethodView):
     def dispatch_request(self, *args, **kwargs):
         """ Cross-origin request support. Authentication. """
         try:
+            raw_user_filters = request.args.get("filter_json")
+            # Parse raw user filters
+            if raw_user_filters:
+                with map_error(APIError(400, "bad_filter")):
+                    g.user_filters = json.loads(b64decode(unquote(raw_user_filters.encode()).decode()))
+            else:
+                g.user_filters = {}
             # Authentication
             with map_error(APIError(401, "auth_failed")):
                 token = b64decode(request.headers.get(AUTH_TOKEN_HEADER, b""))
@@ -220,3 +229,13 @@ def map_error(error_mapping):
         # Match all exceptions to same object
         else:
             raise error_mapping
+
+def getattr_keypath(obj, key_path, default):
+    """ Get attribute by its key path. """
+    split_key_path = key_path.split(".")
+    for part in split_key_path:
+        if hasattr(obj, part):
+            obj = getattr(obj, part)
+        else:
+            return default
+    return obj

@@ -1,5 +1,5 @@
 """ Entry point of Academia backend package. """
-from os import unlink
+from os import unlink, environ
 from code import interact
 from tempfile import mkstemp
 from unittest import defaultTestLoader, TextTestRunner
@@ -16,9 +16,12 @@ def setup_app(app_name=__name__, db_uri=None):
     global app, db
     # Flask application
     app = Flask(app_name)
+    # Application configuration
+    app.config.update({
+        "SQLALCHEMY_DATABASE_URI": db_uri,
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+    })
     # Database object
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db = SQLAlchemy(app)
     # Import all related modules
     import_module("app.models")
@@ -52,6 +55,8 @@ def run_test(**kwargs):
 def run_shell(**kwargs):
     """ Run in shell mode. """
     setup_app(db_uri=DB_URI)
+    # Environment variables
+    environ["TERM"] = "xterm-256color"
     # Run in interactive mode
     interact()
 

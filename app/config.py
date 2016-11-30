@@ -16,3 +16,6 @@ DB_NAME = os.environ["DB_NAME"]
 DB_USERNAME = os.environ["POSTGRES_USER"]
 # Database user password
 DB_PASSWORD = os.environ["POSTGRES_PASSWORD"]
+
+# Data root
+DATA_ROOT = "/root/data"
