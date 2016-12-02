@@ -35,12 +35,14 @@ class Nested(fields.Nested):
 
 def load_data(schema, data, load_args={}, **kwargs):
     """ Load data through schema. """
-    # Schema class
-    if issubclass(schema, Schema):
-        schema = schema(**kwargs)
     # Schema instance
-    else:
+    if isinstance(schema, Schema):
         load_args = kwargs
+    # Schema class
+    elif issubclass(schema, Schema):
+        schema = schema(**kwargs)
+    else:
+        raise TypeError("'schema' must be a derived class or a instance of Schema class.")
     # Parse with error handling
     obj, error = schema.load(data, **load_args)
     if error:
@@ -53,12 +55,14 @@ def dump_data(schema, obj, nested=(), nested_user=False, dump_args={}, **kwargs)
     nested = list(nested)
     if nested_user:
         nested += g.user_filters.get("with", [])
-    # Schema class
-    if issubclass(schema, Schema):
-        schema = schema(**kwargs)
     # Schema instance
+    if isinstance(schema, Schema):
+        load_args = kwargs
+    # Schema class
+    elif issubclass(schema, Schema):
+        schema = schema(**kwargs)
     else:
-        dump_args = kwargs
+        raise TypeError("'schema' must be a derived class or a instance of Schema class.")
     # Dump with nested schema support
     schema.context["__serialize_nested"] = nested
     result = schema.dump(obj, **dump_args)[0]

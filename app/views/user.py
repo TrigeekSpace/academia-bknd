@@ -69,6 +69,7 @@ class UserView(APIView):
     })
     def login(self):
         """ Log user in. """
+        assert g.params!=None
         # Find user
         user = get_by(
             User,
@@ -80,10 +81,13 @@ class UserView(APIView):
         session = Session(token=os.urandom(TOKEN_LEN), user=user)
         db.session.add(session)
         db.session.commit()
+        # Token
+        token = b64encode(session.token).decode()
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data={"token": b64encode(session.token).decode("utf-8")}
+            user=dump_data(UserSchema, user),
+            token=token
         )
     @res_action("logout")
     @auth_required()

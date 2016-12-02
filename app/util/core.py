@@ -73,7 +73,7 @@ class APIView(MethodView):
                 status="failed",
                 type="exception",
                 exception_type=type(e).__name__,
-                backtrace=format_exc()
+                backtrace=format_exc().split("\n")
             )
             response.status_code = 400
         # Cross-origin request
