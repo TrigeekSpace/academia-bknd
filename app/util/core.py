@@ -25,17 +25,27 @@ SUCCESS_RESP = {"status": "success"}
 class APIError(Exception):
     """ API error class. """
     def __init__(self, status, type, **kwargs):
+        """ Constructor. """
         self.data = dict(status="failed", type=type, **kwargs)
         self.status = status
 
 def assert_logic(value, description, status=400):
-    """ API logic assert. """
+    """
+    API logic assert.
+
+    Args:
+        value: Boolean value for assertion.
+        description: Description of the logic error.
+        status: Response status.
+    Returns:
+        The value asserted.
+    """
     if not value:
         raise APIError(status, "logic", reason=description)
     return value
 
 class APIView(MethodView):
-    """ Backend API view. """
+    """ Backend API view class. """
     # Session class (Used to break reference circle)
     session_class = None
     # Get by primary key
@@ -73,7 +83,7 @@ class APIView(MethodView):
                 status="failed",
                 type="exception",
                 exception_type=type(e).__name__,
-                backtrace=format_exc().split("\n")
+                backtrace=format_exc()
             )
             response.status_code = 400
         # Cross-origin request
@@ -122,7 +132,17 @@ class APIView(MethodView):
         )
 
 def register_view(url, endpoint=None, view=None):
-    """ Register view with given URL. """
+    """
+    Register view with given URL.
+    Usually used as decorator.
+
+    Args:
+        url: Base URL for given view.
+        endpoint: Name of the endpoint. Same with view class name by default.
+        view: View class.
+    Returns:
+        View class.
+    """
     # Use as decorator
     if view==None:
         return lambda view: register_view(url, endpoint, view)
@@ -145,21 +165,52 @@ def register_view(url, endpoint=None, view=None):
     return view
 
 def set_metadata(obj, name, value):
-    """ Set metadata for object. """
+    """
+    Set metadata for object.
+
+    Args:
+        name: Metadata key.
+        value: Metadata value.
+    """
     metadata = getattr(obj, METADATA_KEY, {})
     metadata[name] = value
     setattr(obj, METADATA_KEY, metadata)
 
 def has_metadata(obj, name):
-    """ Check if an object has metadata. """
+    """
+    Check if an object has given metadata.
+
+    Args:
+        name: Name of the metadata key.
+    Returns:
+        Boolean value indicating the existance of given metadata.
+    """
     return name in getattr(obj, METADATA_KEY, {})
 
 def get_metadata(obj, name, default=None):
-    """ Get metadata. """
+    """
+    Get metadata of an object.
+
+    Args:
+        name: Name of the metadata key.
+        default: Fallback value if given type of metadata is not found.
+    Returns:
+        Value of given type of metadata.
+    """
     return getattr(obj, METADATA_KEY, {}).get(name, default)
 
 def res_data(name, view=None, handler=None):
-    """ Declare resource data handler. """
+    """
+    Declare resouce data handler that handles 'GET /<res>/<name>' route.
+    Usually used as decorator.
+
+    Args:
+        name: Data name.
+        view: APIView class to apply. Usually not needed.
+        handler: Route handler.
+    Returns:
+        Handler function.
+    """
     if handler==None:
         return lambda handler: res_data(name, view, handler)
     if view==None:
@@ -169,7 +220,17 @@ def res_data(name, view=None, handler=None):
     return handler
 
 def res_action(name, view=None, handler=None):
-    """ Declare resource action handler. """
+    """
+    Declare resource action handler that handles 'POST /<res>/<name>' route.
+    Usually used as decorator.
+
+    Args:
+        name: Action name.
+        view: APIView class to apply. Usually not needed.
+        handler: Route handler.
+    Returns:
+        Handler function.
+    """
     if handler==None:
         return lambda handler: res_action(name, view, handler)
     if view==None:
@@ -179,7 +240,17 @@ def res_action(name, view=None, handler=None):
     return handler
 
 def inst_data(name, view=None, handler=None):
-    """ Declare instance data handler. """
+    """
+    Declare instance data handler that handles 'GET /<res>/<id>/<name>' route.
+    Usually used as decorator.
+
+    Args:
+        name: Data name.
+        view: APIView class to apply. Usually not needed.
+        handler: Route handler.
+    Returns:
+        Handler function.
+    """
     if handler==None:
         return lambda handler: inst_data(name, view, handler)
     if view==None:
@@ -189,7 +260,17 @@ def inst_data(name, view=None, handler=None):
     return handler
 
 def inst_action(name, view=None, handler=None):
-    """ Declare instance action handler. """
+    """
+    Declare instance action handler that handles 'POST /<res>/<id>/<name>' route.
+    Usually used as decorator.
+
+    Args:
+        name: Action name.
+        view: APIView class to apply. Usually not needed.
+        handler: Route handler.
+    Returns:
+        Handler function.
+    """
     if handler==None:
         return lambda handler: inst_action(name, view, handler)
     if view==None:
@@ -202,13 +283,40 @@ __first_cap_rx = re.compile("(.)([A-Z][a-z]+)")
 __all_cap_rx = re.compile("([a-z0-9])([A-Z])")
 
 def camel_to_snake(camel_name):
-    """ Convert camel case name to snake case. """
+    """
+    Convert camel case name to snake case.
+
+    >>> camel_to_snake("thisIsAVariable")
+    'this_is_a_variable'
+
+    Args:
+        camel_name: Camel case name.
+    Returns:
+        Corresponding name in snake case.
+    """
     s1 = __first_cap_rx.sub(r"\1_\2", camel_name)
     return __all_cap_rx.sub(r"\1_\2", s1).lower()
 
 @contextmanager
 def map_error(error_mapping):
-    """ Execute code in a with block that does error mapping for the API. """
+    """
+    Execute code in a with block that does error mapping for the API.
+
+    >>> with map_error(APIError(400, "e")):
+    ...     raise TypeError()
+    Traceback (most recent call last):
+      ...
+    app.util.core.APIError: (400, 'e')
+
+    >>> with map_error({TypeError: APIError(400, "e1"), AssertionError: APIError(400, "e2")}):
+    ...     raise AssertionError()
+    Traceback (most recent call last):
+      ...
+    app.util.core.APIError: (400, 'e2')
+
+    Args:
+        error_mapping: Either an error object or an error mapping from exception type to target error object.
+    """
     try:
         yield
     except Exception as e:
@@ -230,8 +338,24 @@ def map_error(error_mapping):
         else:
             raise error_mapping
 
-def getattr_keypath(obj, key_path, default):
-    """ Get attribute by its key path. """
+def getattr_keypath(obj, key_path, default=None):
+    """
+    Get attribute by its key path.
+
+    >>> class a(object):
+    ...     class b(object):
+    ...         c = 2
+    ...
+    >>> getattr_keypath(a, "b.c")
+    2
+
+    Args:
+        obj: Target object.
+        key_path: Key path separated by dot.
+        default: Fallback value for a non-existing keypath.
+    Returns:
+        Value corresponding with given key path.
+    """
     split_key_path = key_path.split(".")
     for part in split_key_path:
         if hasattr(obj, part):
