@@ -72,7 +72,7 @@ class APIView(MethodView):
             # Authentication
             with map_error(APIError(401, "auth_failed")):
                 token = b64decode(request.headers.get(AUTH_TOKEN_HEADER, b""))
-                g.user = self.get_pk(session_class, token).user if token else None
+                g.user = self.get_pk(self.session_class, token).user if token else None
             # Call base class method
             response = super(APIView, self).dispatch_request(*args, **kwargs)
         except APIError as e:
