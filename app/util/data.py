@@ -342,3 +342,11 @@ def filter_user(query_set, model):
     for handler in __user_filters:
         query_set = handler(query_set, model, g.user_filters)
     return query_set
+
+def file_field(**kwargs):
+    """ Define a Marshmallow file field to use with depot. """
+    return fields.Function(
+        serialize=lambda file_obj: file_obj.path,
+        deserialize=lambda file_obj: file_obj,
+        **kwargs
+    )

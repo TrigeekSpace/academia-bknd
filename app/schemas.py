@@ -6,7 +6,7 @@ from marshmallow_sqlalchemy import ModelSchema, field_for
 from app import db
 from app.config import USER_PASSWD_HMAC_SALT, N_HASH_ROUNDS
 from app.models import *
-
+from app.util.data import file_field
 
 class UserSchema(ModelSchema):
     """ User schema class. """
@@ -32,7 +32,7 @@ class UserSchema(ModelSchema):
 
 class PaperSchema(ModelSchema):
     """ Paper schema class. """
-    paper_file = fields.Raw()
+    paper_file = file_field()
     class Meta:
         """ User schema meta class. """
         model = Paper
@@ -44,7 +44,7 @@ class PaperSchema(ModelSchema):
 
 class NoteSchema(ModelSchema):
     """ Paper schema class. """
-    annotation_file = fields.Raw()
+    annotation_file = file_field()
     class Meta:
         """ User schema meta class. """
         model = Note

@@ -57,7 +57,3 @@ class PaperView(APIView):
         db.session.commit()
         # Success
         return jsonify(**SUCCESS_RESP)
-
-    @inst_data("file")
-    def get_file(self, id):
-        
