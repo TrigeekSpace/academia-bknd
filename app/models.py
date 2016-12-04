@@ -15,7 +15,7 @@ class User(db.Model):
     join_date = db.Column(db.DateTime(), default=datetime.now)
     active = db.Column(db.Boolean(), default=False)
     #avatar = db.Column(UploadedFileField())
-    self_introduce = db.Column(db.Text(256), unique=True)
+    self_introduce = db.Column(db.Text(), unique=True)
     job = db.Column(db.String(64), unique=True)
 
 
@@ -53,8 +53,8 @@ class Note(db.Model):
     authors = db.Column(db.String(256), unique=False)
     create_time = db.Column(db.DateTime(), default=datetime.now)
     last_modified = db.Column(db.DateTime(), default=datetime.now)
-    author, author_id = foreign_key("User", backref_name="sessions")
-    collectors = many_to_many("Note", "User", backref_name="Notes")
+    author, author_id = foreign_key("User", backref_name="notes")
+    collectors = many_to_many("Note", "User", backref_name="collect_notes")
     content = db.Column(db.Text(), unique=False)
     annotation_file = db.Column(UploadedFileField())
 
@@ -73,14 +73,14 @@ class Reply(db.Model):
     provider, provider_id = foreign_key("User", backref_name="replies")
     host_question, q_id = foreign_key("Question", backref_name="replies")
     content = db.Column(db.Text())
-    upvotes = many_to_many("Question", "User", backref_name="replies_upvote")
-    downvotes = many_to_many("Question", "User", backref_name="replies_downvote")
+    upvotes = many_to_many("Reply", "User", backref_name="replies_upvote")
+    downvotes = many_to_many("Reply", "User", backref_name="replies_downvote")
     create_time = db.Column(db.DateTime(), default=datetime.now)
     last_modified = db.Column(db.DateTime(), default=datetime.now)
 
 class Comment(db.Model):
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    provider, provider_id = foreign_key("User", backref_name="replies")
+    provider, provider_id = foreign_key("User", backref_name="comments")
     host_question, q_id = foreign_key("Question", backref_name="comments")
     host_reply, r_id = foreign_key("Reply", backref_name="comments")
     content = db.Column(db.Text(), unique=False)
