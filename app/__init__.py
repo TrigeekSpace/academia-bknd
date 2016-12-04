@@ -6,8 +6,9 @@ from unittest import defaultTestLoader, TextTestRunner
 from importlib import import_module
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from depot.manager import DepotManager
 
-from app.config import DB_USERNAME, DB_PASSWORD, DB_NAME
+from app.config import DB_USERNAME, DB_PASSWORD, DB_NAME, DATA_ROOT
 
 DB_URI = "postgresql+pg8000://%s:%s@db:5432/%s" % (DB_USERNAME, DB_PASSWORD, DB_NAME)
 
@@ -29,6 +30,11 @@ def setup_app(app_name=__name__, db_uri=None):
     })
     # Database object
     db = SQLAlchemy(app)
+    # Depot
+    DepotManager.configure("default", {
+        "depot.storage_path": DATA_ROOT
+    })
+    app.wsgi_app = DepotManager.make_middleware(app.wsgi_app)
     # Import all related modules
     import_module("app.models")
     import_module("app.views")

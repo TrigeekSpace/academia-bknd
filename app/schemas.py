@@ -5,7 +5,8 @@ from marshmallow_sqlalchemy import ModelSchema, field_for
 
 from app import db
 from app.config import USER_PASSWD_HMAC_SALT, N_HASH_ROUNDS
-from app.models import User
+from app.models import *
+
 
 class UserSchema(ModelSchema):
     """ User schema class. """
@@ -28,3 +29,26 @@ class UserSchema(ModelSchema):
         load_only = ("password",)
         dump_only = ("id", "join_date")
         exclude = ("sessions",)
+
+class PaperSchema(ModelSchema):
+    """ Paper schema class. """
+    paper_file = fields.Raw()
+    class Meta:
+        """ User schema meta class. """
+        model = Paper
+        sqla_session = db.session
+        load_only = ("paper_file",) #deserialize
+        dump_only = ("owners","id",) #serialize
+        exclude = () #both not
+
+
+class NoteSchema(ModelSchema):
+    """ Paper schema class. """
+    annotation_file = fields.Raw()
+    class Meta:
+        """ User schema meta class. """
+        model = Note
+        sqla_session = db.session
+        load_only = () #deserialize
+        dump_only = ("id",) #serialize
+        exclude = () #both not

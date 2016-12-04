@@ -1,5 +1,6 @@
 """ SQLAlchemy database models. """
 from datetime import datetime
+from depot.fields.sqlalchemy import UploadedFileField
 
 from app import db
 from app.util.data import many_to_many, foreign_key
@@ -13,6 +14,10 @@ class User(db.Model):
     password = db.Column(db.Binary(32))
     join_date = db.Column(db.DateTime(), default=datetime.now)
     active = db.Column(db.Boolean(), default=False)
+    #avatar = db.Column(UploadedFileField())
+    self_introduce = db.Column(db.Text(256), unique=True)
+    job = db.Column(db.String(64), unique=True)
+
 
 class Session(db.Model):
     """ API session class. """
@@ -28,3 +33,56 @@ class Group(db.Model, AbstractBaseGroup):
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     name = db.Column(db.String(32), unique=True)
     users = many_to_many("Group", "User", backref_name="groups")
+
+
+class Paper(db.Model):
+    """ Paper model class. """
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    title = db.Column(db.String(256), unique=False)
+    abstract = db.Column(db.Text(), unique=False)
+    authors = db.Column(db.String(256), unique=False)
+    conference = db.Column(db.String(128), unique=False)
+    publish_date = db.Column(db.DateTime(), default=datetime.now) # Accurate to the day
+    owners = many_to_many("Paper", "User", backref_name="papers")
+    paper_file = db.Column(UploadedFileField())
+
+class Note(db.Model):
+    """ User model class. """
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    title = db.Column(db.String(256), unique=False)
+    authors = db.Column(db.String(256), unique=False)
+    create_time = db.Column(db.DateTime(), default=datetime.now)
+    last_modified = db.Column(db.DateTime(), default=datetime.now)
+    author, author_id = foreign_key("User", backref_name="sessions")
+    collectors = many_to_many("Note", "User", backref_name="Notes")
+    content = db.Column(db.Text(), unique=False)
+    annotation_file = db.Column(UploadedFileField())
+
+class Question(db.Model):
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    provider, provider_id = foreign_key("User", backref_name="questions_asked")
+    titie = db.Column(db.String(256), unique=False)
+    description = db.Column(db.Text(), unique=False)
+    upvotes = many_to_many("Question", "User", backref_name="questions_upvote")
+    downvotes = many_to_many("Question", "User", backref_name="questions_downvote")
+    create_time = db.Column(db.DateTime(), default=datetime.now)
+    last_modified = db.Column(db.DateTime(), default=datetime.now)
+
+class Reply(db.Model):
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    provider, provider_id = foreign_key("User", backref_name="replies")
+    host_question, q_id = foreign_key("Question", backref_name="replies")
+    content = db.Column(db.Text())
+    upvotes = many_to_many("Question", "User", backref_name="replies_upvote")
+    downvotes = many_to_many("Question", "User", backref_name="replies_downvote")
+    create_time = db.Column(db.DateTime(), default=datetime.now)
+    last_modified = db.Column(db.DateTime(), default=datetime.now)
+
+class Comment(db.Model):
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    provider, provider_id = foreign_key("User", backref_name="replies")
+    host_question, q_id = foreign_key("Question", backref_name="comments")
+    host_reply, r_id = foreign_key("Reply", backref_name="comments")
+    content = db.Column(db.Text(), unique=False)
+    create_time = db.Column(db.DateTime(), default=datetime.now)
+    last_modified = db.Column(db.DateTime(), default=datetime.now)
