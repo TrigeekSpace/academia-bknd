@@ -7,7 +7,7 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm.query import Query
 
 from app import db
-from app.util.core import APIError, camel_to_snake, map_error
+from app.util.core import APIError, camel_to_snake, map_error, getattr_keypath
 
 class Nested(fields.Nested):
     """
@@ -83,7 +83,7 @@ def dump_data(schema, obj, nested=(), nested_user=False, dump_args={}, **kwargs)
     # Nested serialization field list
     nested = list(nested)
     if nested_user:
-        nested += g.user_filters.get("with", [])
+        nested += g.json_params.get("with", [])
     # Schema instance
     if isinstance(schema, Schema):
         load_args = kwargs
@@ -272,7 +272,7 @@ def __filter_handler(query_set, model, params):
     """
     query = params.get("query")
     if query:
-        filter_exp = __build_filter_exp(query)
+        filter_exp = __build_filter_exp(query, model)
         return query_set.filter(filter_exp)
     else:
         return query_set
@@ -313,11 +313,11 @@ def __pagination_handler(query_set, model, params):
     """
     # Offset
     offset = params.get("offset")
-    if offset:
+    if offset!=None:
         query_set = query_set.offset(offset)
     # Limit
     limit = params.get("limit")
-    if limit:
+    if limit!=None:
         query_set = query_set.limit(limit)
     return query_set
 
@@ -340,7 +340,7 @@ def filter_user(query_set, model):
     """
     # Handle user filters
     for handler in __user_filters:
-        query_set = handler(query_set, model, g.user_filters)
+        query_set = handler(query_set, model, g.json_params)
     return query_set
 
 def file_field(**kwargs):

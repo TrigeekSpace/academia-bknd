@@ -4,7 +4,7 @@ from importlib import import_module
 from base64 import b64decode
 from contextlib import contextmanager
 from types import FunctionType
-from traceback import format_exc
+from traceback import format_exc, print_exc
 from base64 import b64decode
 from urllib.parse import unquote
 from flask import Response, request, g, jsonify
@@ -62,13 +62,13 @@ class APIView(MethodView):
     def dispatch_request(self, *args, **kwargs):
         """ Cross-origin request support. Authentication. """
         try:
-            raw_user_filters = request.args.get("filter_json")
+            raw_json_params = request.args.get("json_params")
             # Parse raw user filters
-            if raw_user_filters:
-                with map_error(APIError(400, "bad_filter")):
-                    g.user_filters = json.loads(b64decode(unquote(raw_user_filters.encode()).decode()))
+            if raw_json_params:
+                with map_error(APIError(400, "bad_json_params")):
+                    g.json_params = json.loads(b64decode(unquote(raw_json_params).encode()).decode())
             else:
-                g.user_filters = {}
+                g.json_params = {}
             # Authentication
             with map_error(APIError(401, "auth_failed")):
                 token = b64decode(request.headers.get(AUTH_TOKEN_HEADER, b""))
@@ -86,6 +86,8 @@ class APIView(MethodView):
                 backtrace=format_exc()
             )
             response.status_code = 400
+            # Print exception backtrace
+            print_exc()
         # Cross-origin request
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response

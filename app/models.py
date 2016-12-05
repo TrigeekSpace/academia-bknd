@@ -33,7 +33,7 @@ class Group(db.Model, AbstractBaseGroup):
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     name = db.Column(db.String(32), unique=True)
     users = many_to_many("Group", "User", backref_name="groups")
-
+    introduce = db.Column(db.Text())
 
 class Paper(db.Model):
     """ Paper model class. """
@@ -44,6 +44,7 @@ class Paper(db.Model):
     conference = db.Column(db.String(128), unique=False)
     publish_date = db.Column(db.DateTime(), default=datetime.now) # Accurate to the day
     owners = many_to_many("Paper", "User", backref_name="papers")
+    owngroup = many_to_many("Paper", "Group", backref_name="papers")
     paper_file = db.Column(UploadedFileField())
 
 class Note(db.Model):
@@ -55,6 +56,7 @@ class Note(db.Model):
     last_modified = db.Column(db.DateTime(), default=datetime.now)
     author, author_id = foreign_key("User", backref_name="notes")
     collectors = many_to_many("Note", "User", backref_name="collect_notes")
+    owngroup = many_to_many("Note", "Group", backref_name="notes")
     content = db.Column(db.Text(), unique=False)
     annotation_file = db.Column(UploadedFileField())
 
