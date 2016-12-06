@@ -33,7 +33,7 @@ class PaperView(APIView):
         )
     def retrieve(self, id):
         """ Get existing user information. """
-        user = get_pk(Paper, id)
+        paper = get_pk(Paper, id)
         return jsonify(
             **SUCCESS_RESP,
             data=dump_data(PaperSchema, paper)
@@ -47,7 +47,7 @@ class PaperView(APIView):
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(UserSchema, user)
+            data=dump_data(UserSchema, paper)
         )
     def destroy(self, id):
         """ Remove user. """

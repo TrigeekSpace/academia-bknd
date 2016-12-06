@@ -8,7 +8,7 @@ from app.schemas import *
 from app.util.core import *
 from app.util.data import *
 
-@register_view("/papers")
+@register_view("/notes")
 class NoteView(APIView):
     """ Note view class. """
     def list(self):
@@ -23,7 +23,7 @@ class NoteView(APIView):
     def create(self):
         """ Create a new user. """
         # Load user data
-        data = {**request.form, **request.files}
+        data = {**request.form, **request.files, "author": g.user}
         note = load_data(NoteSchema, data)
         # Add to database
         # Success

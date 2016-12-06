@@ -15,9 +15,8 @@ class User(db.Model):
     join_date = db.Column(db.DateTime(), default=datetime.now)
     active = db.Column(db.Boolean(), default=False)
     #avatar = db.Column(UploadedFileField())
-    self_introduce = db.Column(db.Text(), unique=True)
+    self_introduction = db.Column(db.Text(), unique=True)
     job = db.Column(db.String(64), unique=True)
-
 
 class Session(db.Model):
     """ API session class. """
@@ -33,7 +32,7 @@ class Group(db.Model, AbstractBaseGroup):
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     name = db.Column(db.String(32), unique=True)
     users = many_to_many("Group", "User", backref_name="groups")
-    introduce = db.Column(db.Text())
+    introduction = db.Column(db.Text())
 
 class Paper(db.Model):
     """ Paper model class. """
@@ -51,7 +50,6 @@ class Note(db.Model):
     """ User model class. """
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     title = db.Column(db.String(256), unique=False)
-    authors = db.Column(db.String(256), unique=False)
     create_time = db.Column(db.DateTime(), default=datetime.now)
     last_modified = db.Column(db.DateTime(), default=datetime.now)
     author, author_id = foreign_key("User", backref_name="notes")
