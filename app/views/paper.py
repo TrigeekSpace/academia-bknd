@@ -19,11 +19,11 @@ class PaperView(APIView):
             **SUCCESS_RESP,
             data=dump_data(PaperSchema, papers, many=True)
         )
-
+    @auth_required()
     def create(self):
         """ Create a new user. """
         # Load user data
-        paper = load_data(PaperSchema, get_form())
+        paper = load_data(PaperSchema, {**get_form(), "author": g.user.id})
         # Add to database
         db.session.add(paper)
         db.session.commit()

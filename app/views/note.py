@@ -7,6 +7,7 @@ from app.models import *
 from app.schemas import *
 from app.util.core import *
 from app.util.data import *
+from app.util.perm import auth_required
 
 @register_view("/notes")
 class NoteView(APIView):
@@ -19,13 +20,14 @@ class NoteView(APIView):
             **SUCCESS_RESP,
             data=dump_data(NoteSchema, notes, many=True)
         )
-
+    @auth_required()
     def create(self):
         """ Create a new user. """
-        # Load user data
-        data = {**request.form, **request.files, "author": g.user}
-        note = load_data(NoteSchema, data)
+        # Load note data
+        note = load_data(NoteSchema, {**get_form(), "author": g.user.id})
         # Add to database
+        db.session.add(note)
+        db.session.commit(note)
         # Success
         return jsonify(
             **SUCCESS_RESP,

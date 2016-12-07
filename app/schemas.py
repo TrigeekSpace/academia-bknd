@@ -34,22 +34,26 @@ class UserSchema(ModelSchema):
 class PaperSchema(ModelSchema):
     """ Paper schema class. """
     paper_file = file_field()
+    owners = Nested("UserSchema", many=True, model=User)
     class Meta:
         """ User schema meta class. """
         model = Paper
         sqla_session = db.session
-        load_only = ("paper_file",) #deserialize
-        dump_only = ("owners","id",) #serialize
+        load_only = () #deserialize
+        dump_only = ("owners", "owngroup", "id") #serialize
         exclude = () #both not
 
 
 class NoteSchema(ModelSchema):
     """ Paper schema class. """
     annotation_file = file_field()
+    author = Nested("UserSchema", model=User)
+    paper = Nested("PaperSchema", model=Paper)
+    collectors = Nested("UserSchema", many=True, model=User)
     class Meta:
         """ User schema meta class. """
         model = Note
         sqla_session = db.session
         load_only = () #deserialize
-        dump_only = ("id",) #serialize
+        dump_only = ("id", "author", "paper", "collectors", "owngroup") #serialize
         exclude = () #both not
