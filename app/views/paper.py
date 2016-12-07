@@ -23,9 +23,10 @@ class PaperView(APIView):
     def create(self):
         """ Create a new user. """
         # Load user data
-        data = {**request.form, **request.files}
-        paper = load_data(PaperSchema, data)
+        paper = load_data(PaperSchema, get_form())
         # Add to database
+        db.session.add(paper)
+        db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,

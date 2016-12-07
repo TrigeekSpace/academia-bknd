@@ -390,3 +390,15 @@ def file_field(**kwargs):
         deserialize=lambda file_obj: file_obj,
         **kwargs
     )
+
+def get_form():
+    """ Get form data and files from request object. """
+    data = {}
+    # Form
+    for key, value in request.form.items():
+        data[key] = value
+    # File
+    for key, value in request.files.items():
+        data[key] = value
+    return data
+    

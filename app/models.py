@@ -53,6 +53,7 @@ class Note(db.Model):
     create_time = db.Column(db.DateTime(), default=datetime.now)
     last_modified = db.Column(db.DateTime(), default=datetime.now)
     author, author_id = foreign_key("User", backref_name="notes")
+    paper, paper_id = foreign_key("Paper", backref_name="notes")
     collectors = many_to_many("Note", "User", backref_name="collect_notes")
     owngroup = many_to_many("Note", "Group", backref_name="notes")
     content = db.Column(db.Text(), unique=False)
