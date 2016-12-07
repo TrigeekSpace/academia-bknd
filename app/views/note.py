@@ -24,10 +24,10 @@ class NoteView(APIView):
     def create(self):
         """ Create a new user. """
         # Load note data
-        note = load_data(NoteSchema, {**get_form(), "author": g.user.id})
+        note = load_data(NoteSchema, {**get_form(), "author": g.user})
         # Add to database
         db.session.add(note)
-        db.session.commit(note)
+        db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,

@@ -7,6 +7,7 @@ from app.models import *
 from app.schemas import *
 from app.util.core import *
 from app.util.data import *
+from app.util.perm import auth_required
 
 @register_view("/papers")
 class PaperView(APIView):
@@ -23,7 +24,7 @@ class PaperView(APIView):
     def create(self):
         """ Create a new user. """
         # Load user data
-        paper = load_data(PaperSchema, {**get_form(), "author": g.user.id})
+        paper = load_data(PaperSchema, {**get_form(), "author": g.user})
         # Add to database
         db.session.add(paper)
         db.session.commit()

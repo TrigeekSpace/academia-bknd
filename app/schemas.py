@@ -55,5 +55,5 @@ class NoteSchema(ModelSchema):
         model = Note
         sqla_session = db.session
         load_only = () #deserialize
-        dump_only = ("id", "author", "paper", "collectors", "owngroup") #serialize
+        dump_only = ("id", "collectors", "owngroup") #serialize
         exclude = () #both not

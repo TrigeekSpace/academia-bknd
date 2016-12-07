@@ -1,11 +1,12 @@
 """ Model and schema related utilities. """
-import functools, operator
+import functools, operator, json
 from flask import request, g
 from marshmallow import Schema, fields
 from marshmallow.schema import SchemaMeta
 from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm.query import Query
 from sqlalchemy.inspection import inspect
+from sqlalchemy.sql.operators import ColumnOperators
 
 from app import db
 from app.util.core import APIError, camel_to_snake, map_error, getattr_keypath, setitem_keypath
@@ -37,6 +38,9 @@ class Nested(fields.Nested):
         model = self.metadata["model"]
         nested_fields_stack = self.context.get("__nested_stack", None)
         nested_fields = nested_fields_stack[-1]
+        # No value
+        if value==None:
+            return value
         # Queryset type check
         if many and not isinstance(value, Query):
             raise TypeError("Only queryset can be serialized when many is True.")
@@ -70,6 +74,8 @@ class Nested(fields.Nested):
         Returns:
             Deserialized value.
         """
+        import sys
+        print(value, file=sys.stderr)
         many = self.metadata.get("many", False)
         model = self.metadata["model"]
         # Many
@@ -260,7 +266,8 @@ __comp_filters = {
     "gt": operator.gt,
     "gte": operator.ge,
     "lt": operator.lt,
-    "lte": operator.le
+    "lte": operator.le,
+    "contains": ColumnOperators.contains
 }
 
 # Logical filter
@@ -396,7 +403,7 @@ def get_form():
     data = {}
     # Form
     for key, value in request.form.items():
-        data[key] = value
+        data[key] = json.loads(value)
     # File
     for key, value in request.files.items():
         data[key] = value

@@ -26,6 +26,8 @@ class UserView(APIView):
     def create(self):
         """ Create a new user. """
         # Load user data
+        import sys
+        print(request.get_json(), file=sys.stderr)
         user = load_data(UserSchema, request.get_json())
         # Add to database
         db.session.add(user)
@@ -69,6 +71,8 @@ class UserView(APIView):
     })
     def login(self):
         """ Log user in. """
+        import sys
+        print(g, file=sys.stderr)
         assert g.params!=None
         # Find user
         user = get_by(
