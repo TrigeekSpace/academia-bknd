@@ -365,3 +365,19 @@ def getattr_keypath(obj, key_path, default=None):
         else:
             return default
     return obj
+
+def setitem_keypath(obj, key_path, value, create=False):
+    """
+    Set item by its key path.
+    """
+    split_key_path = key_path.split(".")
+    for i, part in enumerate(split_key_path[:-1]):
+        # Create
+        if create:
+            obj.setdefault(part, {})
+        if part in obj:
+            obj = obj[part]
+        # No such attribute
+        else:
+            raise KeyError(".".join(split_key_path[:i+1]))
+    obj[split_key_path[-1]] = value

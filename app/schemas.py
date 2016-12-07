@@ -6,12 +6,13 @@ from marshmallow_sqlalchemy import ModelSchema, field_for
 from app import db
 from app.config import USER_PASSWD_HMAC_SALT, N_HASH_ROUNDS
 from app.models import *
-from app.util.data import file_field
+from app.util.data import Nested, file_field
 
 class UserSchema(ModelSchema):
     """ User schema class. """
     email = field_for(User, "email", validate=validate.Email())
     password = fields.Method("calc_password")
+    papers = Nested("PaperSchema", many=True, model=User)
     def calc_password(self, raw_password):
         """
         Calculate HMAC-SHA2 password.

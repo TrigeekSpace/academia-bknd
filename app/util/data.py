@@ -5,42 +5,78 @@ from marshmallow import Schema, fields
 from marshmallow.schema import SchemaMeta
 from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm.query import Query
+from sqlalchemy.inspection import inspect
 
 from app import db
-from app.util.core import APIError, camel_to_snake, map_error, getattr_keypath
+from app.util.core import APIError, camel_to_snake, map_error, getattr_keypath, setitem_keypath
 
 class Nested(fields.Nested):
-    """
-    Modified Marshmallow Nested field that allows flexible nested serialization.
-    Use on_exclude metadata to control nested field behavior when excluded.
-    (Currently on_exclude can be 'none', 'primary_keys' or 'default')
-    """
-    def _serialize(self, nested_obj, attr, obj):
+    """ Modified Marshmallow Nested field with flexible nested serialization and deserialization. """
+    def __init__(self, *args, **kwargs):
+        # Initialize base class
+        super(Nested, self).__init__(*args, **kwargs)
+        # Model
+        model = self.metadata.get("model")
+        if not model:
+            raise AttributeError("Model parameter must be defined for nested schema field.")
+        # Primary key
+        model_mirror = self.model_mirror = inspect(model)
+        self.primary_key = getattr(model, model_mirror.primary_key[0].name)
+    def _serialize(self, value, attr, obj):
         """
-        Serialize nested data.
+        Serialized nested data.
 
         Args:
-            nested_obj: Nested model instance or query set.
-            attr: Attribute name of nested object.
-            obj: Model instance being handled.
+            value: The value to be serialized.
+            attr: The attribute or key on the object to be serialized.
+            obj: The object the value was pulled from.
         Returns:
-            Serialized JSON object, with or without nested serialization applied.
+            Serialized value.
         """
-        serialize_nested = self.context.get("__serialize_nested")
-        # Metadata
-        on_exclude = self.metadata.get("on_exclude", "none")
         many = self.metadata.get("many", False)
+        model = self.metadata["model"]
+        nested_fields_stack = self.context.get("__nested_stack", None)
+        nested_fields = nested_fields_stack[-1]
+        # Queryset type check
+        if many and not isinstance(value, Query):
+            raise TypeError("Only queryset can be serialized when many is True.")
         # Nested field serialization restriction
-        if not serialize_nested or attr not in serialize_nested:
-            # None
-            if on_exclude=="none":
-                return None
-            # TODO: Primary key
+        if not nested_fields or attr not in nested_fields:
+            if many:
+                return [item[0] for item in value.with_entities(self.primary_key).all()]
+            else:
+                return getattr(value, self.primary_key.name)
         # Transfrom query set to iterable data if many is true
-        if many and isinstance(nested_obj, Query):
-            nested_obj = nested_obj.all()
+        if many and isinstance(value, Query):
+            value = value.all()
+        # Nested nested fields
+        nested_nested_fields = nested_fields[attr]
+        if nested_nested_fields:
+            nested_fields_stack.append(nested_nested_fields)
+            result = super(Nested, self)._serialize(value, attr, obj)
+            nested_fields_stack.pop()
+        else:
+            result = super(Nested, self)._serialize(value, attr, obj)
         # Call base class serialize method
-        return super(Nested, self)._serialize(nested_obj, attr, obj)
+        return result
+    def _deserialize(self, value, attr, data):
+        """
+        Find nested data by primary key as deserialize result.
+
+        Args:
+            value: The value to be deserialized.
+            attr: The attribute or key in "data" to be deserialized.
+            obj: The raw input data.
+        Returns:
+            Deserialized value.
+        """
+        many = self.metadata.get("many", False)
+        model = self.metadata["model"]
+        # Many
+        if many:
+            raise NotImplementedError()
+        else:
+            return value if isinstance(value, model) else get_pk(model, value)
 
 def load_data(schema, data, load_args={}, **kwargs):
     """
@@ -92,10 +128,14 @@ def dump_data(schema, obj, nested=(), nested_user=False, dump_args={}, **kwargs)
         schema = schema(**kwargs)
     else:
         raise TypeError("'schema' must be a derived class or a instance of Schema class.")
+    # Nested fields
+    nested_fields = {}
+    for keypath in nested:
+        setitem_keypath(nested_fields, keypath, None, True)
     # Dump with nested schema support
-    schema.context["__serialize_nested"] = nested
+    schema.context["__nested_stack"] = [nested_fields]
     result = schema.dump(obj, **dump_args)[0]
-    schema.context["__serialize_nested"] = None
+    schema.context["__nested_stack"] = None
     return result
 
 def get_pk(model, pk, allow_null=False, error=APIError(404, "not_found")):
