@@ -37,7 +37,7 @@ class Nested(fields.Nested):
         many = self.metadata.get("many", False)
         model = self.metadata["model"]
         nested_fields_stack = self.context.get("__nested_stack", None)
-        nested_fields = nested_fields_stack[-1]
+        nested_fields = nested_fields_stack[-1] if nested_fields_stack else None
         # No value
         if value==None:
             return value
@@ -137,7 +137,7 @@ def dump_data(schema, obj, nested=(), nested_user=False, dump_args={}, **kwargs)
     # Nested fields
     nested_fields = {}
     for keypath in nested:
-        setitem_keypath(nested_fields, keypath, None, True)
+        setitem_keypath(nested_fields, keypath, {}, True)
     # Dump with nested schema support
     schema.context["__nested_stack"] = [nested_fields]
     result = schema.dump(obj, **dump_args)[0]

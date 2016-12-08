@@ -18,7 +18,7 @@ class PaperView(APIView):
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(PaperSchema, papers, many=True)
+            data=dump_data(PaperSchema, papers, many=True, nested_user=True)
         )
     @auth_required()
     def create(self):
@@ -38,7 +38,7 @@ class PaperView(APIView):
         paper = get_pk(Paper, id)
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(PaperSchema, paper)
+            data=dump_data(PaperSchema, paper, nested_user=True)
         )
     def partial_update(self, id):
         """ Update user information. """

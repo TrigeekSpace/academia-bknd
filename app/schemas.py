@@ -35,6 +35,7 @@ class PaperSchema(ModelSchema):
     """ Paper schema class. """
     paper_file = file_field()
     owners = Nested("UserSchema", many=True, model=User)
+    notes = Nested("NoteSchema", many=True, model=Note)
     class Meta:
         """ User schema meta class. """
         model = Paper
