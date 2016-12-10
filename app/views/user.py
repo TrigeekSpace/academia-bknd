@@ -21,7 +21,7 @@ class UserView(APIView):
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(UserSchema, users, many=True)
+            data=dump_data(UserSchema, users, many=True, nested_user=True)
         )
     def create(self):
         """ Create a new user. """
@@ -42,7 +42,7 @@ class UserView(APIView):
         user = get_pk(User, id)
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(UserSchema, user)
+            data=dump_data(UserSchema, user, nested_user=True)
         )
     def partial_update(self, id):
         """ Update user information. """

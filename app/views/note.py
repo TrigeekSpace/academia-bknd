@@ -18,7 +18,7 @@ class NoteView(APIView):
         # Success
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(NoteSchema, notes, many=True)
+            data=dump_data(NoteSchema, notes, many=True, nested_user=True)
         )
     @auth_required()
     def create(self):
@@ -38,7 +38,7 @@ class NoteView(APIView):
         note = get_pk(Note, id)
         return jsonify(
             **SUCCESS_RESP,
-            data=dump_data(NoteSchema, note)
+            data=dump_data(NoteSchema, note, nested_user=True)
         )
     def partial_update(self, id):
         """ Update user information. """

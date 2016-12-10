@@ -16,6 +16,7 @@ class User(db.Model):
     active = db.Column(db.Boolean(), default=False)
     #avatar = db.Column(UploadedFileField())
     self_introduction = db.Column(db.Text(), unique=True)
+    contribution = db.Column(db.Integer(), default=0)
     job = db.Column(db.String(64), unique=True)
 
 class Session(db.Model):
@@ -44,6 +45,7 @@ class Paper(db.Model):
     publish_date = db.Column(db.DateTime(), default=datetime.now) # Accurate to the day
     owners = many_to_many("Paper", "User", backref_name="papers")
     owngroup = many_to_many("Paper", "Group", backref_name="papers")
+    collectors = many_to_many("Paper", "User", backref_name="collect_papers")
     paper_file = db.Column(UploadedFileField())
 
 class Note(db.Model):

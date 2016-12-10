@@ -390,13 +390,12 @@ def filter_user(query_set, model):
         query_set = handler(query_set, model, g.json_params)
     return query_set
 
-def file_field(**kwargs):
-    """ Define a Marshmallow file field to use with depot. """
-    return fields.Function(
-        serialize=lambda file_obj: file_obj.path,
-        deserialize=lambda file_obj: file_obj,
-        **kwargs
-    )
+class FileField(fields.Field):
+    """ Schema field for FileDepot file. """
+    def _serialize(self, value, attr, obj):
+        return value.path
+    def _deserialize(self, value, attr, data):
+        return value
 
 def get_form():
     """ Get form data and files from request object. """
@@ -408,4 +407,3 @@ def get_form():
     for key, value in request.files.items():
         data[key] = value
     return data
-    

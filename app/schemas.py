@@ -6,13 +6,14 @@ from marshmallow_sqlalchemy import ModelSchema, field_for
 from app import db
 from app.config import USER_PASSWD_HMAC_SALT, N_HASH_ROUNDS
 from app.models import *
-from app.util.data import Nested, file_field
+from app.util.data import Nested, FileField
 
 class UserSchema(ModelSchema):
     """ User schema class. """
     email = field_for(User, "email", validate=validate.Email())
     password = fields.Method("calc_password")
-    papers = Nested("PaperSchema", many=True, model=User)
+    papers = Nested("PaperSchema", many=True, model=Paper)
+    collect_papers = Nested("PaperSchema", many=True, model=Paper)
     def calc_password(self, raw_password):
         """
         Calculate HMAC-SHA2 password.
@@ -33,9 +34,10 @@ class UserSchema(ModelSchema):
 
 class PaperSchema(ModelSchema):
     """ Paper schema class. """
-    paper_file = file_field()
+    paper_file = FileField()
     owners = Nested("UserSchema", many=True, model=User)
     notes = Nested("NoteSchema", many=True, model=Note)
+    collectors = Nested("UserSchema", many=True, model=User)
     class Meta:
         """ User schema meta class. """
         model = Paper
@@ -44,10 +46,9 @@ class PaperSchema(ModelSchema):
         dump_only = ("owners", "owngroup", "id") #serialize
         exclude = () #both not
 
-
 class NoteSchema(ModelSchema):
     """ Paper schema class. """
-    annotation_file = file_field()
+    annotation_file = FileField()
     author = Nested("UserSchema", model=User)
     paper = Nested("PaperSchema", model=Paper)
     collectors = Nested("UserSchema", many=True, model=User)
