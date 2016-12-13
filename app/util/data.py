@@ -397,13 +397,15 @@ class FileField(fields.Field):
     def _deserialize(self, value, attr, data):
         return value
 
-def get_form():
-    """ Get form data and files from request object. """
-    data = {}
+def get_data():
+    """ Get request data from request object. """
+    # JSON
+    if request.is_json:
+        return request.get_json()
     # Form
     for key, value in request.form.items():
-        data[key] = json.loads(value)
+        req_data[key] = json.loads(value)
     # File
     for key, value in request.files.items():
-        data[key] = value
+        req_data[key] = value
     return data

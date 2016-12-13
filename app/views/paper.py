@@ -24,7 +24,7 @@ class PaperView(APIView):
     def create(self):
         """ Create a new user. """
         # Load user data
-        paper = load_data(PaperSchema, {**get_form(), "author": g.user})
+        paper = load_data(PaperSchema, {**get_data(), "author": g.user})
         # Add to database
         db.session.add(paper)
         db.session.commit()
@@ -44,8 +44,7 @@ class PaperView(APIView):
         """ Update user information. """
         # Load update data, then find and update user
         paper = get_pk(Paper, id)
-        data = {**request.form, **request.files}
-        load_data(PaperSchema, data, instance=paper)
+        load_data(PaperSchema, get_data(), instance=paper)
         # Success
         return jsonify(
             **SUCCESS_RESP,
