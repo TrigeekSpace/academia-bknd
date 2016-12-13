@@ -1,8 +1,8 @@
 #! /usr/bin/env python3.5
 """ Entry point of Academia application. """
 # Gevent monkey patch
-from gevent import monkey
-monkey.patch_all()
+#from gevent import monkey
+#monkey.patch_all()
 
 from argparse import ArgumentParser
 import app
