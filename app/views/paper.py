@@ -58,3 +58,23 @@ class PaperView(APIView):
         db.session.commit()
         # Success
         return jsonify(**SUCCESS_RESP)
+    @inst_action("toggle_collect_status")
+    @auth_required()
+    def toggle_collect_status(self, id):
+        """ Toggle paper collection status. """
+        # Find paper
+        paper = get_pk(Paper, id)
+        # Cancel collection
+        if user in paper.collectors:
+            paper.collectors.remove(user)
+            return jsonify(
+                **SUCCESS_RESP,
+                collected=False
+            )
+        # Collect paper
+        else:
+            paper.collectors.append(user)
+            return jsonify(
+                **SUCCESS_RESP,
+                collected=True
+            )
