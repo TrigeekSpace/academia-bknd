@@ -64,9 +64,11 @@ class PaperView(APIView):
         """ Toggle paper collection status. """
         # Find paper
         paper = get_pk(Paper, id)
+        user = g.user
         # Cancel collection
         if user in paper.collectors:
             paper.collectors.remove(user)
+            db.session.commit()
             return jsonify(
                 **SUCCESS_RESP,
                 collected=False
@@ -74,6 +76,7 @@ class PaperView(APIView):
         # Collect paper
         else:
             paper.collectors.append(user)
+            db.session.commit()
             return jsonify(
                 **SUCCESS_RESP,
                 collected=True

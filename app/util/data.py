@@ -402,10 +402,11 @@ def get_data():
     # JSON
     if request.is_json:
         return request.get_json()
+    req_data = {}
     # Form
     for key, value in request.form.items():
         req_data[key] = json.loads(value)
     # File
     for key, value in request.files.items():
         req_data[key] = value
-    return data
+    return req_data
