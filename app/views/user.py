@@ -66,7 +66,7 @@ class UserView(APIView):
     @res_action("login")
     @parse_param(schema_class={
         "username": fields.String(),
-        "password": fields.Method("calc_password"),
+        "password": fields.Method(deserialize="calc_password"),
         "calc_password": UserSchema.calc_password
     })
     def login(self):
