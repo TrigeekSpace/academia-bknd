@@ -9,7 +9,7 @@ from app.models import User, Session
 from app.schemas import UserSchema
 from app.config import TOKEN_LEN, AUTH_TOKEN_HEADER
 from app.util.core import SUCCESS_RESP, APIView, register_view, res_action, assert_logic, APIError, map_error
-from app.util.data import load_data, dump_data, get_pk, get_by, parse_param, filter_user
+from app.util.data import load_data, dump_data, get_pk, get_by, parse_param, filter_user, get_data
 from app.util.perm import auth_required
 
 @register_view("/users")
@@ -28,7 +28,7 @@ class UserView(APIView):
         # Load user data
         import sys
         print(request.get_json(), file=sys.stderr)
-        user = load_data(UserSchema, request.get_json())
+        user = load_data(UserSchema, get_data())
         # Add to database
         db.session.add(user)
         db.session.commit()
@@ -48,7 +48,7 @@ class UserView(APIView):
         """ Update user information. """
         # Load update data, then find and update user
         user = get_pk(User, id)
-        load_data(UserSchema, request.get_json(), instance=user)
+        load_data(UserSchema, get_data(), instance=user)
         db.session.commit()
         # Success
         return jsonify(
@@ -66,7 +66,7 @@ class UserView(APIView):
     @res_action("login")
     @parse_param(schema_class={
         "username": fields.String(),
-        "password": fields.Method("calc_password"),
+        "password": fields.Method(deserialize="calc_password"),
         "calc_password": UserSchema.calc_password
     })
     def login(self):

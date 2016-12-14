@@ -24,7 +24,7 @@ class NoteView(APIView):
     def create(self):
         """ Create a new user. """
         # Load note data
-        note = load_data(NoteSchema, {**get_form(), "author": g.user})
+        note = load_data(NoteSchema, {**get_data(), "author": g.user})
         # Add to database
         db.session.add(note)
         db.session.commit()
@@ -44,8 +44,7 @@ class NoteView(APIView):
         """ Update user information. """
         # Load update data, then find and update user
         note = get_pk(Note, id)
-        data = {**request.form, **request.files}
-        load_data(NoteSchema, data, instance=note)
+        load_data(NoteSchema, get_data(), instance=note)
         # Success
         return jsonify(
             **SUCCESS_RESP,

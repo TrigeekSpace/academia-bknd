@@ -34,7 +34,7 @@ def setup_app(app_name=__name__, db_uri=None):
     DepotManager.configure("default", {
         "depot.storage_path": DATA_ROOT
     })
-    app.wsgi_app = DepotManager.make_middleware(app.wsgi_app)
+    app.wsgi_app = DepotManager.make_middleware(app.wsgi_app, replace_wsgi_filewrapper=True)
     # Import all related modules
     import_module("app.models")
     import_module("app.views")

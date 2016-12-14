@@ -11,7 +11,7 @@ from app.util.data import Nested, FileField
 class UserSchema(ModelSchema):
     """ User schema class. """
     email = field_for(User, "email", validate=validate.Email())
-    password = fields.Method("calc_password")
+    password = fields.Method(deserialize="calc_password")
     papers = Nested("PaperSchema", many=True, model=Paper)
     collect_papers = Nested("PaperSchema", many=True, model=Paper)
     def calc_password(self, raw_password):
@@ -23,7 +23,12 @@ class UserSchema(ModelSchema):
         Returns:
             Byte sequence of HMAC-SHA256 result of user password.
         """
-        return pbkdf2_hmac("sha256", raw_password, USER_PASSWD_HMAC_SALT, N_HASH_ROUNDS)
+        return pbkdf2_hmac(
+            "sha256",
+            raw_password.encode(),
+            USER_PASSWD_HMAC_SALT,
+            N_HASH_ROUNDS
+        )
     class Meta:
         """ User schema meta class. """
         model = User
