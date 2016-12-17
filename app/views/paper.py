@@ -1,6 +1,7 @@
 """ Paper-related APIs. """
 import os
 from flask import request, jsonify, g
+from sqlalchemy.exc import ProgrammingError
 
 from app import db
 from app.models import *

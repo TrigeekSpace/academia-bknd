@@ -3,6 +3,7 @@ import os
 from base64 import b64encode, b64decode
 from flask import request, jsonify, g
 from marshmallow import fields
+from sqlalchemy.exc import ProgrammingError
 
 from app import db
 from app.models import User, Session
