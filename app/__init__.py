@@ -74,8 +74,9 @@ def run_test(**kwargs):
     setup_app(db_uri="sqlite://")
     db.create_all()
     # Run tests
-    tests = defaultTestLoader.loadTestsFromModule("app.tests")
+    tests = defaultTestLoader.discover("app/tests")
     TextTestRunner().run(tests)
+    # unittest.main(module='app.tests')
 
 def run_shell(**kwargs):
     """
