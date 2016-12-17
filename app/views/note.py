@@ -1,4 +1,4 @@
-""" Paper-related APIs. """
+""" Note-related APIs. """
 import os
 from flask import request, jsonify, g
 
@@ -58,3 +58,26 @@ class NoteView(APIView):
         db.session.commit()
         # Success
         return jsonify(**SUCCESS_RESP)
+    @inst_action("toggle_collect_status")
+    @auth_required()
+    def toggle_collect_status(self, id):
+        """ Toggle note collection status. """
+        # Find note
+        note = get_pk(Note, id)
+        user = g.user
+        # Cancel collection
+        if user in note.collectors:
+            note.collectors.remove(user)
+            db.session.commit()
+            return jsonify(
+                **SUCCESS_RESP,
+                collected=False
+            )
+        # Collect note
+        else:
+            note.collectors.append(user)
+            db.session.commit()
+            return jsonify(
+                **SUCCESS_RESP,
+                collected=True
+            )
