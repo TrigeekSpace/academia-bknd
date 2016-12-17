@@ -1,5 +1,5 @@
 """ Model and schema related utilities. """
-import functools, operator, json
+import functools, operator, json, re
 from flask import request, g
 from marshmallow import Schema, fields
 from marshmallow.schema import SchemaMeta
@@ -410,3 +410,16 @@ def get_data():
     for key, value in request.files.items():
         req_data[key] = value
     return req_data
+
+unique_msg_rx = re.compile(r"\((\w+)\)=\((\w+)\)")
+
+def handle_prog_error(e):
+    """ Handle PG8000 programming error. """
+    # Error arguments and numbers
+    error_args = e.orig.args
+    errno = int(error_args[2])
+    # Unique constraint violation
+    if errno==23505:
+        key, value = unique_msg_rx.search(error_args[4]).groups()
+        return APIError(400, "unique_violation", key=key, value=value)
+    return e

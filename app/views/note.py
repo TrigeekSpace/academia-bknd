@@ -1,6 +1,7 @@
 """ Note-related APIs. """
 import os
 from flask import request, jsonify, g
+from sqlalchemy.exc import ProgrammingError
 
 from app import db
 from app.models import *
@@ -26,8 +27,9 @@ class NoteView(APIView):
         # Load note data
         note = load_data(NoteSchema, {**get_data(), "author": g.user})
         # Add to database
-        db.session.add(note)
-        db.session.commit()
+        with map_error({ProgrammingError: handle_prog_error}):
+            db.session.add(note)
+            db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,
@@ -44,7 +46,9 @@ class NoteView(APIView):
         """ Update user information. """
         # Load update data, then find and update user
         note = get_pk(Note, id)
-        load_data(NoteSchema, get_data(), instance=note)
+        with map_error({ProgrammingError: handle_prog_error}):
+            load_data(NoteSchema, get_data(), instance=note)
+            db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,

@@ -26,8 +26,9 @@ class PaperView(APIView):
         # Load user data
         paper = load_data(PaperSchema, {**get_data(), "author": g.user})
         # Add to database
-        db.session.add(paper)
-        db.session.commit()
+        with map_error({ProgrammingError: handle_prog_error}):
+            db.session.add(paper)
+            db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,
@@ -44,7 +45,9 @@ class PaperView(APIView):
         """ Update user information. """
         # Load update data, then find and update user
         paper = get_pk(Paper, id)
-        load_data(PaperSchema, get_data(), instance=paper)
+        with map_error({ProgrammingError: handle_prog_error}):
+            load_data(PaperSchema, get_data(), instance=paper)
+            db.session.commit()
         # Success
         return jsonify(
             **SUCCESS_RESP,
