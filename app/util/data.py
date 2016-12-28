@@ -393,7 +393,7 @@ def filter_user(query_set, model):
 class FileField(fields.Field):
     """ Schema field for FileDepot file. """
     def _serialize(self, value, attr, obj):
-        return value.path
+        return value.path if value else value
     def _deserialize(self, value, attr, data):
         return value
 
