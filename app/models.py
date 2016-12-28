@@ -14,7 +14,7 @@ class User(db.Model):
     password = db.Column(db.Binary(32))
     join_date = db.Column(db.DateTime(), default=datetime.now)
     active = db.Column(db.Boolean(), default=False)
-    #avatar = db.Column(UploadedFileField())
+    avatar = db.Column(UploadedFileField())
     self_introduction = db.Column(db.Text(), unique=True)
     contribution = db.Column(db.Integer(), default=0)
     job = db.Column(db.String(64), unique=True)

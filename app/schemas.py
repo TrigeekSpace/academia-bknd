@@ -15,6 +15,7 @@ class UserSchema(ModelSchema):
     papers = Nested("PaperSchema", many=True, model=Paper)
     collect_papers = Nested("PaperSchema", many=True, model=Paper)
     collect_notes = Nested("NoteSchema", many=True, model=Note)
+    avatar = FileField()
     def calc_password(self, raw_password):
         """
         Calculate HMAC-SHA2 password.
