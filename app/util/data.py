@@ -267,7 +267,8 @@ __comp_filters = {
     "gte": operator.ge,
     "lt": operator.lt,
     "lte": operator.le,
-    "contains": ColumnOperators.contains
+    "contains": ColumnOperators.contains,
+    "icontains": lambda column, text: column.ilike("%"+text+"%")
 }
 
 # Logical filter
