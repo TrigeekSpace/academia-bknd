@@ -25,4 +25,4 @@ if __name__=="__main__":
 # Production mode; get WSGI application
 else:
     app.setup_app(db_uri=app.DB_URI)
-    wsgi_app = app.app
+    application = app.app

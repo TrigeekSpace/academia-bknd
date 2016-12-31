@@ -3,6 +3,8 @@
 # Python bytecode
 *.pyc
 __pycache__
+# Log files
+*.log
 
 # Private configuration
 private

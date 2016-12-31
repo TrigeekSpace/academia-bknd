@@ -1,0 +1,27 @@
+version: "2"
+services:
+    academia:
+        build: 
+            context: .
+            dockerfile: Dockerfile.deploy
+        volumes:
+            - .:/root/project:ro
+            - academia-data:/root/data
+        links:
+            - db
+        ports:
+            - "8080:8080"
+        env_file:
+            - ./private/env_file
+    db:
+        image: postgres:alpine
+        volumes:
+            - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+            - academia-db:/var/lib/postgresql/data
+        env_file:
+            - ./private/env_file
+volumes:
+    academia-data:
+        driver: local
+    academia-db:
+        driver: local
