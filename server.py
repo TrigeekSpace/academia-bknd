@@ -24,5 +24,9 @@ if __name__=="__main__":
     app.run_with_mode(**args)
 # Production mode; get WSGI application
 else:
+    # Set-up application
     app.setup_app(db_uri=app.DB_URI)
+    # Create database
+    app.db.create_all()
+    # WSGI application
     application = app.app
